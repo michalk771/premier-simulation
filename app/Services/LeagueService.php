@@ -22,7 +22,7 @@ class LeagueService
         return $this->leagueTableRepository->getLeagueTable();
     }
 
-    public function getTeam(int $teamId): League
+    public function getTeam(?int $teamId): League
     {
         return $this->leagueTableRepository->getTeam($teamId);
     }
