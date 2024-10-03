@@ -58,9 +58,9 @@ class MatchServiceTest extends TestCase
 
         $this->teamRepository->method('getAllBestTeams')->willReturn(new \Illuminate\Database\Eloquent\Collection($teams));
         $this->matchRepository->method('getMatchesByWeek')->with($week)->willReturn($previousMatches);
-        $this->leagueService->method('getLeagueTable')->willReturn(new \Illuminate\Database\Eloquent\Collection($previousMatches));
+        $this->leagueService->method('getLeagueTable')->willReturn(new \Illuminate\Database\Eloquent\Collection());
 
-        $this->leagueService->method('getTeam')->willReturn(new League(['team_id' => 1]));
+        $this->leagueService->method('getTeam')->willReturn(new League());
 
         $this->matchRepository->method('createMatch')->willReturn(new Matches());
 
@@ -191,8 +191,16 @@ class MatchServiceTest extends TestCase
         ]);
 
         $this->matchRepository->method('getLatestMatches')->with(2)->willReturn($latestMatches);
-        $this->leagueService->method('getLeagueTable')->willReturn(new Collection());
-        $this->leagueService->method('calculateWinPercentages')->with([])->willReturn([]);
+
+        $mockLeagueTable = [
+            new League(['id' => 1, 'team_id' => 1]),
+            new League(['id' => 2, 'team_id' => 2]),
+        ];
+
+        $this->leagueService->method('getLeagueTable')->willReturn(new Collection($mockLeagueTable));
+
+        $this->leagueService->method('calculateWinPercentages')->willReturn([]);
+
         $this->matchRepository->method('getLatestWeekNumber')->willReturn(1);
 
         $result = $this->matchService->getLatestWeeks();
