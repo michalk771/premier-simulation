@@ -11,7 +11,6 @@ class Matches extends Model
     use HasFactory;
 
     protected $table = 'matches';
-
     protected $fillable = ['home_team_id', 'away_team_id', 'home_score', 'away_score', 'week_number'];
 
     public function homeTeam()

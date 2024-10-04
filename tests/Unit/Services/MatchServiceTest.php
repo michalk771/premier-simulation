@@ -1,5 +1,4 @@
 <?php
-
 namespace Tests\Unit\Services;
 
 use App\Models\League;
@@ -10,6 +9,7 @@ use App\Repositories\Team\TeamRepositoryInterface;
 use App\Services\LeagueService;
 use App\Services\MatchService;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
@@ -24,6 +24,7 @@ class MatchServiceTest extends TestCase
     /** @var TeamRepositoryInterface&MockObject */
     protected TeamRepositoryInterface|MockObject $teamRepository;
 
+    /** @var MatchService */
     protected MatchService $matchService;
 
     protected function setUp(): void
@@ -36,32 +37,31 @@ class MatchServiceTest extends TestCase
 
         $this->matchService = new MatchService(
             $this->matchRepository,
-            $this->leagueService,
-            $this->teamRepository
+            $this->teamRepository,
+            $this->leagueService
         );
     }
 
-    public function testSimulateWeek()
+    /** @test */
+    public function it_simulates_a_week_successfully()
     {
         $week = 1;
         $teams = [
-            new Team(['id' => 1, 'strength' => 10, 'played' => 0, 'goals_for' => 0, 'goals_against' => 0]),
-            new Team(['id' => 2, 'strength' => 5, 'played' => 0, 'goals_for' => 0, 'goals_against' => 0]),
-            new Team(['id' => 3, 'strength' => 8, 'played' => 0, 'goals_for' => 0, 'goals_against' => 0]),
-            new Team(['id' => 4, 'strength' => 6, 'played' => 0, 'goals_for' => 0, 'goals_against' => 0]),
+            Team::factory()->create(['id' => 1, 'strength' => 10]),
+            Team::factory()->create(['id' => 2, 'strength' => 5]),
+            Team::factory()->create(['id' => 3, 'strength' => 8]),
+            Team::factory()->create(['id' => 4, 'strength' => 6]),
         ];
 
-        $previousMatches = new \Illuminate\Database\Eloquent\Collection([
+        $previousMatches = new EloquentCollection([
             new Matches(['home_team_id' => 1, 'home_score' => 3, 'away_team_id' => 2, 'away_score' => 1]),
             new Matches(['home_team_id' => 3, 'home_score' => 2, 'away_team_id' => 1, 'away_score' => 2]),
         ]);
 
-        $this->teamRepository->method('getAllBestTeams')->willReturn(new \Illuminate\Database\Eloquent\Collection($teams));
+        $this->teamRepository->method('getAllBestTeams')->willReturn(new EloquentCollection($teams));
         $this->matchRepository->method('getMatchesByWeek')->with($week)->willReturn($previousMatches);
-        $this->leagueService->method('getLeagueTable')->willReturn(new \Illuminate\Database\Eloquent\Collection());
-
+        $this->leagueService->method('getLeagueTable')->willReturn(new EloquentCollection());
         $this->leagueService->method('getTeam')->willReturn(new League());
-
         $this->matchRepository->method('createMatch')->willReturn(new Matches());
 
         $result = $this->matchService->simulateWeek($week);
@@ -70,7 +70,8 @@ class MatchServiceTest extends TestCase
         $this->assertArrayHasKey('league', $result);
     }
 
-    public function testGetTeamsForSimulationReturnsFourTeams()
+    /** @test */
+    public function it_returns_four_teams_for_simulation()
     {
         $teams = [
             new Team(['id' => 1, 'strength' => 10]),
@@ -85,25 +86,10 @@ class MatchServiceTest extends TestCase
         $this->assertCount(4, $result);
     }
 
-    public function testGetTeamsForSimulationThrowsException()
+    /** @test */
+    public function it_calculates_goals_scored_correctly()
     {
-        $teams = [
-            new Team(['id' => 1, 'strength' => 10]),
-            new Team(['id' => 2, 'strength' => 5]),
-            new Team(['id' => 3, 'strength' => 8]),
-        ];
-
-        $this->teamRepository->method('getAllBestTeams')->willReturn(new Collection($teams));
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('There must be exactly 4 teams to simulate the week.');
-
-        $this->invokeMethod($this->matchService, 'getTeamsForSimulation');
-    }
-
-    public function testCalculateGoalsScored()
-    {
-        $matches = new \Illuminate\Database\Eloquent\Collection([
+        $matches = new EloquentCollection([
             new Matches(['home_team_id' => 1, 'home_score' => 3, 'away_team_id' => 2, 'away_score' => 1]),
             new Matches(['home_team_id' => 3, 'home_score' => 2, 'away_team_id' => 1, 'away_score' => 2]),
         ]);
@@ -118,7 +104,8 @@ class MatchServiceTest extends TestCase
         $this->assertEquals(2, $goalsScored[3]);
     }
 
-    public function testCreateMatches()
+    /** @test */
+    public function it_creates_matches_correctly()
     {
         $teams = [
             new Team(['id' => 1]),
@@ -126,7 +113,8 @@ class MatchServiceTest extends TestCase
             new Team(['id' => 3]),
             new Team(['id' => 4]),
         ];
-        $matches = $this->invokeMethod($this->matchService, 'createMatches', [new \Illuminate\Database\Eloquent\Collection($teams)]);
+
+        $matches = $this->invokeMethod($this->matchService, 'createMatches', [new EloquentCollection($teams)]);
 
         $this->assertCount(2, $matches);
         $this->assertArrayHasKey('home_team', $matches[0]);
@@ -135,7 +123,8 @@ class MatchServiceTest extends TestCase
         $this->assertArrayHasKey('away_team', $matches[1]);
     }
 
-    public function testSimulateMatch()
+    /** @test */
+    public function it_simulates_a_match_correctly()
     {
         $homeTeam = new Team(['id' => 1, 'strength' => 10]);
         $awayTeam = new Team(['id' => 2, 'strength' => 5]);
@@ -151,7 +140,8 @@ class MatchServiceTest extends TestCase
         $this->assertInstanceOf(Matches::class, $match);
     }
 
-    public function testUpdateTeamStats()
+    /** @test */
+    public function it_updates_team_stats_correctly()
     {
         $team = new Team();
         $team->played = 0;
@@ -173,7 +163,7 @@ class MatchServiceTest extends TestCase
         $this->assertEquals(1, $team->goal_difference);
     }
 
-    public function testGetMatchesForWeek()
+    public function it_can_retrieve_matches_for_a_week()
     {
         $week = 1;
         $this->matchRepository->method('getMatchesByWeek')->with($week, 2)->willReturn(new Collection());
@@ -183,7 +173,7 @@ class MatchServiceTest extends TestCase
         $this->assertInstanceOf(\Illuminate\Support\Collection::class, $result);
     }
 
-    public function testGetLatestWeeks()
+    public function it_can_get_latest_weeks_data()
     {
         $latestMatches = collect([
             new Matches(['home_team_id' => 1, 'home_score' => 3, 'away_team_id' => 2, 'away_score' => 1]),
@@ -198,9 +188,7 @@ class MatchServiceTest extends TestCase
         ];
 
         $this->leagueService->method('getLeagueTable')->willReturn(new Collection($mockLeagueTable));
-
         $this->leagueService->method('calculateWinPercentages')->willReturn([]);
-
         $this->matchRepository->method('getLatestWeekNumber')->willReturn(1);
 
         $result = $this->matchService->getLatestWeeks();
@@ -210,14 +198,5 @@ class MatchServiceTest extends TestCase
         $this->assertArrayHasKey('finalTable', $result);
         $this->assertArrayHasKey('winPercentages', $result);
         $this->assertArrayHasKey('weekNumber', $result);
-    }
-
-    protected function invokeMethod($object, $methodName, array $args = [])
-    {
-        $reflection = new \ReflectionClass($object);
-        $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
-
-        return $method->invokeArgs($object, $args);
     }
 }

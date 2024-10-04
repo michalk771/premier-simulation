@@ -20,5 +20,5 @@ Route::get('/', function () {
     return view('main');
 });
 
-Route::get('/simulate-week', [MatchController::class, 'simulateWeek']);
+Route::post('/simulate-week', [MatchController::class, 'simulateWeek']);
 Route::get('/latest-weeks', [MatchController::class, 'getLatestWeeks']);

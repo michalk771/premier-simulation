@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('league', function (Blueprint $table) {
+        Schema::create('leagues', function (Blueprint $table) {
             $table->id();
             $table->foreignId('team_id')->default(1)->constrained('teams');
             $table->integer('played')->default(0);
