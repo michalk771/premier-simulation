@@ -25,7 +25,7 @@ class TeamRepository implements TeamRepositoryInterface
         return $this->team::with('leagueTable')
             ->get()
             ->sortByDesc(function ($team) {
-                return $team->leagueTable->goal_difference;
+                return $team->leagueTable ? $team->leagueTable->goal_difference : 0;
             })
             ->values();
     }

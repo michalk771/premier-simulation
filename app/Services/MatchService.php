@@ -46,13 +46,7 @@ class MatchService
 
     protected function getTeamsForSimulation(): SupportCollection
     {
-        $teams = $this->teamRepository->getAllBestTeams();
-
-        if (count($teams) !== 4) {
-            throw new \Exception('There must be exactly 4 teams to simulate the week.');
-        }
-
-        return $teams;
+        return $this->teamRepository->getAllBestTeams();
     }
 
     protected function calculateGoalsScored(EloquentCollection $previousMatches): array
