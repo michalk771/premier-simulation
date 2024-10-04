@@ -44,6 +44,28 @@ class MatchService
         ];
     }
 
+    public function getMatchesForWeek(int $week, int $limit = 2): SupportCollection
+    {
+        return $this->matchRepository->getMatchesByWeek($week, $limit);
+    }
+
+    public function getLatestWeeks(): array
+    {
+        $latestMatches = $this->matchRepository->getLatestMatches(2);
+        $leagueTable = $this->leagueService->getLeagueTable();
+        $finalTable = $this->leagueService->getLeagueTable();
+        $winPercentages = $this->leagueService->calculateWinPercentages($finalTable);
+        $latestWeekNumber = $this->matchRepository->getLatestWeekNumber();
+
+        return [
+            'weekMatches' => $latestMatches,
+            'leagueTable' => $leagueTable,
+            'finalTable' => $finalTable,
+            'winPercentages' => $winPercentages,
+            'weekNumber' => $latestWeekNumber,
+        ];
+    }
+
     protected function getTeamsForSimulation(): SupportCollection
     {
         return $this->teamRepository->getAllBestTeams();
@@ -134,27 +156,5 @@ class MatchService
             $team->drawn++;
             $team->points++;
         }
-    }
-
-    public function getMatchesForWeek(int $week, int $limit = 2): SupportCollection
-    {
-        return $this->matchRepository->getMatchesByWeek($week, $limit);
-    }
-
-    public function getLatestWeeks(): array
-    {
-        $latestMatches = $this->matchRepository->getLatestMatches(2);
-        $leagueTable = $this->leagueService->getLeagueTable();
-        $finalTable = $this->leagueService->getLeagueTable();
-        $winPercentages = $this->leagueService->calculateWinPercentages($finalTable);
-        $latestWeekNumber = $this->matchRepository->getLatestWeekNumber();
-
-        return [
-            'weekMatches' => $latestMatches,
-            'leagueTable' => $leagueTable,
-            'finalTable' => $finalTable,
-            'winPercentages' => $winPercentages,
-            'weekNumber' => $latestWeekNumber,
-        ];
     }
 }
