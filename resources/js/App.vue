@@ -40,7 +40,10 @@ export default {
             this.currentWeek = response.data.weekNumber;
         },
         async simulateWeek() {
-            const response = await axios.get(`/simulate-week?week=${this.currentWeek + 1}`);
+            const response = await axios.post('/simulate-week', {
+                week: this.currentWeek + 1
+            });
+
             this.currentWeek++;
             await this.loadLatestWeeks();
         }

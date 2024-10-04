@@ -4,18 +4,19 @@ namespace App\Services;
 use App\Models\Matches;
 use App\Repositories\Match\MatchRepositoryInterface;
 use App\Repositories\Team\TeamRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class MatchService
 {
     protected MatchRepositoryInterface $matchRepository;
-    protected LeagueService $leagueService;
     protected TeamRepositoryInterface $teamRepository;
+    protected LeagueService $leagueService;
 
     public function __construct(
         MatchRepositoryInterface $matchRepository,
-        LeagueService $leagueService,
-        TeamRepositoryInterface $teamRepository
+        TeamRepositoryInterface $teamRepository,
+        LeagueService $leagueService
     ) {
         $this->matchRepository = $matchRepository;
         $this->leagueService = $leagueService;
@@ -35,7 +36,7 @@ class MatchService
             $results[] = $this->simulateMatch($match, $goalsScored, $week);
         }
 
-        $leagueTable = $this->leagueService->getLeagueTable(); // Updated
+        $leagueTable = $this->leagueService->getLeagueTable();
 
         return [
             'weekMatches' => $results,
@@ -43,18 +44,34 @@ class MatchService
         ];
     }
 
-    protected function getTeamsForSimulation(): \Illuminate\Support\Collection
+    public function getMatchesForWeek(int $week, int $limit = 2): SupportCollection
     {
-        $teams = $this->teamRepository->getAllBestTeams();
-
-        if (count($teams) !== 4) {
-            throw new \Exception('There must be exactly 4 teams to simulate the week.');
-        }
-
-        return $teams;
+        return $this->matchRepository->getMatchesByWeek($week, $limit);
     }
 
-    protected function calculateGoalsScored(Collection $previousMatches): array
+    public function getLatestWeeks(): array
+    {
+        $latestMatches = $this->matchRepository->getLatestMatches(2);
+        $leagueTable = $this->leagueService->getLeagueTable();
+        $finalTable = $this->leagueService->getLeagueTable();
+        $winPercentages = $this->leagueService->calculateWinPercentages($finalTable);
+        $latestWeekNumber = $this->matchRepository->getLatestWeekNumber();
+
+        return [
+            'weekMatches' => $latestMatches,
+            'leagueTable' => $leagueTable,
+            'finalTable' => $finalTable,
+            'winPercentages' => $winPercentages,
+            'weekNumber' => $latestWeekNumber,
+        ];
+    }
+
+    protected function getTeamsForSimulation(): SupportCollection
+    {
+        return $this->teamRepository->getAllBestTeams();
+    }
+
+    protected function calculateGoalsScored(EloquentCollection $previousMatches): array
     {
         $goalsScored = [];
         foreach ($previousMatches as $match) {
@@ -65,7 +82,7 @@ class MatchService
         return $goalsScored;
     }
 
-    protected function createMatches(Collection $teams): array
+    protected function createMatches(EloquentCollection $teams): array
     {
         $firstMatch = [$teams[0], $teams[1]];
         shuffle($firstMatch);
@@ -113,8 +130,8 @@ class MatchService
 
     protected function updateLeagueTable($homeTeam, $awayTeam, int $homeScore, int $awayScore): void
     {
-        $homeLeague = $this->leagueService->getTeam($homeTeam->id); // Updated
-        $awayLeague = $this->leagueService->getTeam($awayTeam->id); // Updated
+        $homeLeague = $this->leagueService->getTeam($homeTeam->id);
+        $awayLeague = $this->leagueService->getTeam($awayTeam->id);
 
         $this->updateTeamStats($homeLeague, $homeScore, $awayScore);
         $this->updateTeamStats($awayLeague, $awayScore, $homeScore);
@@ -139,27 +156,5 @@ class MatchService
             $team->drawn++;
             $team->points++;
         }
-    }
-
-    public function getMatchesForWeek(int $week, int $limit = 2): \Illuminate\Support\Collection
-    {
-        return $this->matchRepository->getMatchesByWeek($week, $limit);
-    }
-
-    public function getLatestWeeks(): array
-    {
-        $latestMatches = $this->matchRepository->getLatestMatches(2);
-        $leagueTable = $this->leagueService->getLeagueTable(); // Updated
-        $finalTable = $this->leagueService->getLeagueTable(); // Updated
-        $winPercentages = $this->leagueService->calculateWinPercentages($finalTable); // Updated
-        $latestWeekNumber = $this->matchRepository->getLatestWeekNumber();
-
-        return [
-            'weekMatches' => $latestMatches,
-            'leagueTable' => $leagueTable,
-            'finalTable' => $finalTable,
-            'winPercentages' => $winPercentages,
-            'weekNumber' => $latestWeekNumber,
-        ];
     }
 }

@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\MatchService;
+use App\Http\Requests\SimulateWeekRequest;
 
 class MatchController extends Controller
 {
-    protected $matchService;
+    protected MatchService $matchService;
 
     public function __construct(MatchService $matchService)
     {
         $this->matchService = $matchService;
     }
 
-    public function simulateWeek(Request $request)
+    public function simulateWeek(SimulateWeekRequest $request)
     {
         $week = $request->input('week');
-        $result = $this->matchService->simulateWeek($week);
+        $this->matchService->simulateWeek($week);
+
         return response()->json(200);
     }
 

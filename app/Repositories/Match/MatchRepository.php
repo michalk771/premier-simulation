@@ -6,14 +6,21 @@ use Illuminate\Support\Collection;
 
 class MatchRepository implements MatchRepositoryInterface
 {
+    private Matches $matches;
+
+    public function __construct(Matches $matches)
+    {
+        $this->matches = $matches;
+    }
+
     public function createMatch(array $data): Matches
     {
-        return Matches::create($data);
+        return $this->matches::create($data);
     }
 
     public function getMatchesByWeek(int $weekNumber, ?int $limit = null): Collection
     {
-        $query = Matches::with('homeTeam', 'awayTeam')
+        $query = $this->matches::with('homeTeam', 'awayTeam')
             ->where('week_number', $weekNumber);
 
         if ($limit) {
@@ -25,7 +32,7 @@ class MatchRepository implements MatchRepositoryInterface
 
     public function getLatestMatches(?int $limit = null): Collection
     {
-        $query = Matches::with('homeTeam', 'awayTeam')
+        $query = $this->matches::with('homeTeam', 'awayTeam')
             ->orderBy('id', 'desc');
 
         if ($limit) {
@@ -37,7 +44,7 @@ class MatchRepository implements MatchRepositoryInterface
 
     public function getLatestWeeks(int $limit = 4): Collection
     {
-        return Matches::with('homeTeam', 'awayTeam')
+        return $this->matches::with('homeTeam', 'awayTeam')
             ->orderBy('week_number', 'desc')
             ->take($limit)
             ->get()
@@ -46,7 +53,7 @@ class MatchRepository implements MatchRepositoryInterface
 
     public function getLatestWeekNumber(): ?int
     {
-        return Matches::orderBy('week_number', 'desc')
+        return $this->matches::orderBy('week_number', 'desc')
             ->value('week_number');
     }
 }

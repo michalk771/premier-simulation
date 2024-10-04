@@ -7,9 +7,16 @@ use Illuminate\Support\Collection;
 
 class LeagueRepository implements LeagueRepositoryInterface
 {
+    private League $league;
+
+    public function __construct(League $league)
+    {
+        $this->league = $league;
+    }
+
     public function getLeagueTable(): Collection
     {
-        return League::with('team')
+        return $this->league::with('team')
             ->orderBy('points', 'desc')
             ->orderBy('goal_difference', 'desc')
             ->get();
@@ -17,13 +24,13 @@ class LeagueRepository implements LeagueRepositoryInterface
 
     public function updateTeamStats(int $teamId, array $data): int
     {
-        return League::where('team_id', $teamId)
+        return $this->league::where('team_id', $teamId)
             ->update($data);
     }
 
     public function getBestTeams(int $limit = 2): Collection
     {
-        return League::with('team')
+        return $this->league::with('team')
             ->orderBy('points', 'desc')
             ->orderBy('goal_difference', 'desc')
             ->take($limit)
@@ -44,7 +51,7 @@ class LeagueRepository implements LeagueRepositoryInterface
 
     public function getTeam(int $teamId)
     {
-        return League::where('team_id', $teamId)
+        return $this->league::where('team_id', $teamId)
             ->first();
     }
 }

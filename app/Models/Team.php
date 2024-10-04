@@ -12,7 +12,6 @@ class Team extends Model
     use HasFactory;
 
     protected $table = 'teams';
-
     protected $fillable = ['name', 'strength'];
 
     public function homeMatches()
