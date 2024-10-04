@@ -8,14 +8,21 @@ use Illuminate\Support\Collection;
 
 class TeamRepository implements TeamRepositoryInterface
 {
+    private Team $team;
+
+    public function __construct(Team $team)
+    {
+        $this->team = $team;
+    }
+
     public function getAllTeams(): Collection
     {
-        return Team::with('leagueTable')->get();
+        return $this->team::with('leagueTable')->get();
     }
 
     public function getAllBestTeams(): Collection
     {
-        return Team::with('leagueTable')
+        return $this->team::with('leagueTable')
             ->get()
             ->sortByDesc(function ($team) {
                 return $team->leagueTable->goal_difference;
@@ -25,11 +32,11 @@ class TeamRepository implements TeamRepositoryInterface
 
     public function getTeamById(int $id): ?Team
     {
-        return Team::find($id);
+        return $this->team::find($id);
     }
 
     public function createTeam(array $data): Team
     {
-        return Team::create($data);
+        return $this->team::create($data);
     }
 }
